@@ -3,627 +3,227 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Eventi Sportivi Italiani</title>
+  <title>Miei Eventi Sportivi</title>
   <style>
-    :root{
-      --bg1:#667eea; --bg2:#764ba2;
-      --card:#ffffffee;
-      --text:#222;
-      --muted:#666;
-      --accent:#ffdd59;
-      --danger1:#ff4757; --danger2:#ff3742;
-      --ok:#22c55e;
+    :root {
+      --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
+      --accent: #38bdf8; --danger: #ef4444; --success: #22c55e;
     }
-    *{ box-sizing:border-box; margin:0; padding:0; }
-    body{
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-      min-height:100vh;
-      background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 100%);
-      padding:18px;
-      color:white;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg); color: var(--text);
+      line-height: 1.5; padding: 20px;
     }
-    .container{ max-width:980px; margin:0 auto; }
-    header{
-      display:flex; flex-direction:column; gap:10px;
-      align-items:center; margin-bottom:14px;
+    .container { max-width: 800px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 30px; }
+    h1 { font-size: 2rem; margin-bottom: 10px; color: var(--accent); }
+    
+    .controls {
+      display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;
     }
-    h1{
-      font-size:2.0rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,.25);
-      text-align:center;
+    button {
+      background: var(--accent); color: var(--bg); border: none;
+      padding: 10px 20px; border-radius: 8px; font-weight: bold;
+      cursor: pointer; transition: opacity 0.2s;
     }
-    .subtitle{
-      color:rgba(255,255,255,.86);
-      font-size:.95rem;
-      text-align:center;
-      max-width:80ch;
-      line-height:1.35;
+    button:disabled { opacity: 0.5; }
+
+    .status { text-align: center; font-size: 0.9rem; margin-bottom: 20px; color: #94a3b8; }
+
+    .day-section { margin-bottom: 30px; }
+    .day-title {
+      font-size: 1.25rem; font-weight: bold; margin-bottom: 15px;
+      padding-bottom: 5px; border-bottom: 2px solid var(--accent);
+      text-transform: uppercase; letter-spacing: 1px;
     }
 
-    .controls{
-      display:flex; flex-wrap:wrap; gap:10px;
-      justify-content:center; align-items:center;
-      background:rgba(255,255,255,.12);
-      padding:14px;
-      border-radius:14px;
-      backdrop-filter: blur(10px);
-      margin-bottom:14px;
+    .event-card {
+      background: var(--card); border-radius: 12px; padding: 16px;
+      margin-bottom: 12px; border-left: 4px solid var(--accent);
+      transition: transform 0.2s; cursor: pointer;
     }
-    button{
-      background:#ff6b6b;
-      color:white;
-      border:none;
-      padding:10px 16px;
-      border-radius:999px;
-      font-size:15px;
-      cursor:pointer;
-      transition:transform .2s, box-shadow .2s, opacity .2s;
-      box-shadow:0 4px 14px rgba(0,0,0,.2);
-    }
-    button:hover{ transform: translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.26); }
-    button:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
-    .status{
-      font-size:.95rem;
-      color:rgba(255,255,255,.92);
-      text-align:center;
-    }
+    .event-card:hover { transform: translateX(5px); }
+    .event-card.diretta-goal { border-left-color: var(--danger); background: #450a0a; }
+    
+    .event-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .event-time { font-weight: 800; color: var(--accent); font-size: 1.1rem; }
+    .event-cat { font-size: 0.8rem; background: rgba(56, 189, 248, 0.2); padding: 2px 8px; border-radius: 4px; }
+    .diretta-goal .event-time { color: var(--danger); }
 
-    .grid{ display:grid; gap:16px; }
+    .event-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 6px; }
+    .event-channel { font-size: 0.9rem; color: #94a3b8; font-style: italic; }
 
-    .day-section{ margin-top:2px; }
-    .day-title{
-      font-weight:900;
-      font-size:1.15rem;
-      margin:10px 0 10px;
-      padding-left:10px;
-      border-left:4px solid var(--accent);
-    }
-
-    .event{
-      background:var(--card);
-      color:var(--text);
-      border-radius:14px;
-      padding:14px 14px;
-      box-shadow:0 6px 20px rgba(0,0,0,.12);
-      transition: transform .2s, box-shadow .2s;
-      cursor:pointer;
-    }
-    .event:hover{ transform: translateY(-2px); box-shadow:0 10px 26px rgba(0,0,0,.18); }
-
-    .event-title{ font-weight:900; margin-bottom:6px; line-height:1.25; }
-    .event-meta{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-    .pill{
-      font-size:.82rem;
-      padding:4px 10px;
-      border-radius:999px;
-      background:#eef2ff;
-      color:#374151;
-      white-space:nowrap;
-    }
-    .pill.ok{ background:#dcfce7; color:#065f46; }
-    .pill.warn{ background:#fff7ed; color:#9a3412; }
-
-    .snippet{
-      margin-top:10px;
-      color:var(--muted);
-      font-size:.92rem;
-      line-height:1.35;
-    }
-
-    .diretta-goal{
-      background: linear-gradient(135deg,var(--danger1),var(--danger2)) !important;
-      color:white !important;
-    }
-    .diretta-goal .event-title,
-    .diretta-goal .snippet{ color:white !important; }
-    .diretta-goal .pill{ background: rgba(255,255,255,.2); color:white; }
-
-    .no-events{
-      color:rgba(255,255,255,.88);
-      font-style:italic;
-      text-align:center;
-      margin-top:10px;
-      line-height:1.35;
-    }
-
-    .small{
-      color:rgba(255,255,255,.75);
-      font-size:.85rem;
-      text-align:center;
-      margin-top:14px;
-      line-height:1.35;
-    }
-
-    @media (max-width:600px){
-      body{ padding:14px; }
-      h1{ font-size:1.7rem; }
-      .subtitle{ font-size:.9rem; }
-    }
+    .empty { text-align: center; padding: 20px; color: #64748b; }
+    .reggina-note { color: #f87171; font-weight: bold; margin-top: 5px; display: block; }
   </style>
 </head>
-
 <body>
-  <div class="container">
-    <header>
-      <h1>Eventi Sportivi Italiani</h1>
-      <div class="subtitle">
-        Estrae gli eventi da “Sport in tv oggi” (OA Sport) e li filtra sui tuoi interessi (ieri/oggi/domani), evidenziando anche “Diretta Goal”.
-      </div>
-    </header>
 
-    <div class="controls">
-      <button id="refreshBtn">Aggiorna OA Sport</button>
-      <button id="clearCacheBtn" title="Svuota cache locale">Svuota cache</button>
-      <div class="status" id="status">Pronto.</div>
-    </div>
+<div class="container">
+  <header>
+    <h1>I Miei Eventi Sportivi</h1>
+    <p>Filtro automatico da OA Sport (Ieri/Oggi/Domani)</p>
+  </header>
 
-    <div id="eventsContainer" class="grid"></div>
-
-    <div class="small">
-      Nota: OA Sport può cambiare layout; se il parsing fallisce, prova “Aggiorna” o svuota cache.
-    </div>
+  <div class="controls">
+    <button id="refreshBtn">Aggiorna Dati</button>
   </div>
+  <div class="status" id="status">Inizializzazione...</div>
 
-  <script>
-    // OA Sport - pagine usate (tag + articoli giornalieri) [page:1]
-    const OASPORT_TAG_URL = "https://www.oasport.it/tag/sport-in-tv-oggi/"; // [page:1]
-    const PROXY_RAW = "https://api.allorigins.win/raw?url="; // proxy CORS
+  <div id="app"></div>
+</div>
 
-    // Filtri "tifoso italiano" personalizzati (keyword-based, lato client)
-    const FILTERS = {
-      // Calcio
-      serieA: [/serie a/i],
-      championsItalia: [/champions league/i, /(inter|milan|juventus|napoli|roma|lazio|atalanta|fiorentina|bologna)/i],
-      europaItalia: [/europa league/i, /(roma|lazio|atalanta|fiorentina|bologna|milan|juventus|napoli|inter)/i],
-      confItalia: [/conference league/i, /(fiorentina|roma|lazio|atalanta|bologna|torino)/i],
-      serieBMonzaCz: [/serie b/i, /(monza|catanzaro)/i],
-      regginaD: [/(serie d|serie\s*d)/i, /reggina/i],
+<script>
+const PROXY = "https://api.allorigins.win/raw?url=";
+const TAG_URL = "https://www.oasport.it/tag/sport-in-tv-oggi/";
 
-      // Tennis italiani
-      tennisItaliani: [/(tennis|atp|wta|australian open|roland garros|wimbledon|us open)/i,
-        /(sinner|musetti|berrettini|paolini|darderi|cocciaretto|errani|vavassori|sonego|arnaldi|cecchinato|fognini)/i],
+// CONFIGURAZIONE FILTRI
+const ITALIAN_TEAMS = "Inter|Milan|Juventus|Napoli|Roma|Lazio|Atalanta|Fiorentina|Bologna";
+const TENNIS_PLAYERS = "Sinner|Musetti|Berrettini|Paolini|Darderi|Arnaldi|Sonego|Cobolli|Cocciaretto|Errani|Bronzetti|Vavassori";
 
-      // Motori
-      f1: [/(formula 1|f1)/i],
-      motogp: [/motogp/i],
+const FILTERS = [
+  { name: "Serie A", regex: /Serie A/i },
+  { name: "Champions League", regex: new RegExp(`Champions League.*(${ITALIAN_TEAMS})|(${ITALIAN_TEAMS}).*Champions League`, "i") },
+  { name: "Europa League", regex: new RegExp(`Europa League.*(${ITALIAN_TEAMS})|(${ITALIAN_TEAMS}).*Europa League`, "i") },
+  { name: "Conference League", regex: new RegExp(`Conference League.*(${ITALIAN_TEAMS})|(${ITALIAN_TEAMS}).*Conference League`, "i") },
+  { name: "Serie B (Monza/CZ)", regex: /Serie B.*(Monza|Catanzaro)|(Monza|Catanzaro).*Serie B/i },
+  { name: "Serie D (Reggina)", regex: /Reggina|Serie D/i },
+  { name: "Tennis ITA", regex: new RegExp(TENNIS_PLAYERS, "i") },
+  { name: "F1", regex: /Formula 1|F1/i },
+  { name: "MotoGP", regex: /MotoGP/i },
+  { name: "Volley Monza", regex: /Vero Volley|Monza.*Volley/i },
+  { name: "Sci (Brignone/Goggia)", regex: /Brignone|Sofia Goggia/i },
+  { name: "DIRETTA GOAL", regex: /Diretta Goal/i, isSpecial: true }
+];
 
-      // Volley Monza
-      volleyMonza: [/(volley|pallavolo)/i, /(monza|vero volley)/i],
+async function loadData() {
+  const btn = document.getElementById('refreshBtn');
+  const status = document.getElementById('status');
+  btn.disabled = true;
+  status.textContent = "Recupero lista articoli...";
 
-      // Sci: Brignone e Goggia
-      sciBrignoneGoggia: [/(sci|sci alpino|coppa del mondo)/i, /(brignone|goggia)/i],
+  try {
+    const tagHtml = await fetch(PROXY + encodeURIComponent(TAG_URL)).then(r => r.text());
+    const doc = new DOMParser().parseFromString(tagHtml, 'text/html');
+    const links = Array.from(doc.querySelectorAll('h2 a, h3 a'))
+      .map(a => ({ title: a.innerText, url: a.href }))
+      .filter(l => l.title.toLowerCase().includes("sport in tv oggi"));
 
-      // Diretta Goal
-      direttaGoal: [/diretta goal/i],
-    };
+    const results = { ieri: [], oggi: [], domani: [] };
+    
+    // Analizziamo i primi 5 articoli per trovare ieri, oggi e domani
+    for (const link of links.slice(0, 5)) {
+      const dateType = getDayType(link.title);
+      if (!dateType) continue;
 
-    const CACHE_KEY = "oasport_sportintv_events_cache_v2";
-
-    const DAYS = ["ieri","oggi","domani"];
-
-    document.getElementById("refreshBtn").addEventListener("click", loadAll);
-    document.getElementById("clearCacheBtn").addEventListener("click", () => {
-      localStorage.removeItem(CACHE_KEY);
-      setStatus("Cache svuotata.");
-      render({ ieri: [], oggi: [], domani: [] });
-    });
-
-    function setStatus(text){
-      document.getElementById("status").textContent = text;
+      status.textContent = `Analisi eventi di ${dateType}...`;
+      const artHtml = await fetch(PROXY + encodeURIComponent(link.url)).then(r => r.text());
+      const artDoc = new DOMParser().parseFromString(artHtml, 'text/html');
+      const content = artDoc.querySelector('.mvp-content-main, #mvp-content-main') || artDoc.body;
+      
+      const events = parseEvents(content.innerText);
+      results[dateType] = events;
     }
 
-    function startOfDay(d){
-      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    }
+    render(results);
+    status.textContent = "Ultimo aggiornamento: " + new Date().toLocaleTimeString();
+  } catch (e) {
+    console.error(e);
+    status.textContent = "Errore nel caricamento. Riprova.";
+  } finally {
+    btn.disabled = false;
+  }
+}
 
-    function monthToIndex(itMonth){
-      const m = (itMonth || "").toLowerCase();
-      const map = {
-        "gennaio":0,"febbraio":1,"marzo":2,"aprile":3,"maggio":4,"giugno":5,
-        "luglio":6,"agosto":7,"settembre":8,"ottobre":9,"novembre":10,"dicembre":11
-      };
-      return (m in map) ? map[m] : null;
-    }
+function getDayType(title) {
+  const t = title.toLowerCase();
+  const now = new Date();
+  const months = ["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
+  
+  const match = t.match(/(\d{1,2})\s+([a-z]+)/);
+  if (!match) return null;
 
-    function parseDateFromTitle(title){
-      // Esempio: "Sport in tv oggi (lunedì 26 gennaio): ..." [page:2]
-      const t = (title || "").toLowerCase();
-      const re = /\((?:lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)\s+(\d{1,2})(?:°)?\s+([a-zà]+)\)/i;
-      const m = t.match(re);
-      if (!m) return null;
+  const day = parseInt(match[1]);
+  const month = months.indexOf(match[2]);
+  if (month === -1) return null;
 
-      const dayNum = parseInt(m[1], 10);
-      const monthIdx = monthToIndex(m[2]);
-      if (Number.isNaN(dayNum) || monthIdx === null) return null;
+  const artDate = new Date(now.getFullYear(), month, day);
+  const diff = Math.round((artDate - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000);
 
-      const now = new Date();
-      let year = now.getFullYear();
-      const candidate = new Date(year, monthIdx, dayNum);
-      const diffDays = Math.round((startOfDay(candidate) - startOfDay(now)) / (1000*60*60*24));
-      if (diffDays < -300) year += 1;
-      if (diffDays > 300) year -= 1;
-      return new Date(year, monthIdx, dayNum);
-    }
+  if (diff === 0) return "oggi";
+  if (diff === -1) return "ieri";
+  if (diff === 1) return "domani";
+  return null;
+}
 
-    function dayBucketFromDate(articleDate){
-      const today = startOfDay(new Date());
-      const yest = new Date(today); yest.setDate(today.getDate()-1);
-      const tomo = new Date(today); tomo.setDate(today.getDate()+1);
-
-      const a = startOfDay(articleDate).getTime();
-      if (a === yest.getTime()) return "ieri";
-      if (a === today.getTime()) return "oggi";
-      if (a === tomo.getTime()) return "domani";
-      return null;
-    }
-
-    function normalizeSpace(s){
-      return (s || "").replace(/\s+/g, " ").trim();
-    }
-
-    function stripTags(html){
-      return normalizeSpace((html || "").replace(/<[^>]*>/g, " "));
-    }
-
-    function safeText(s){ return normalizeSpace(s || ""); }
-
-    function matchesAll(text, regexList){
-      const s = text || "";
-      return regexList.every(r => r.test(s));
-    }
-
-    function classifyEvent(eventText){
-      const t = eventText || "";
-
-      if (matchesAll(t, FILTERS.direttaGoal)) return { ok:true, category:"Diretta Goal", isDirettaGoal:true };
-
-      // Calcio
-      if (matchesAll(t, FILTERS.serieA)) return { ok:true, category:"Calcio Serie A" };
-      if (matchesAll(t, FILTERS.championsItalia)) return { ok:true, category:"Champions (ITA)" };
-      if (matchesAll(t, FILTERS.europaItalia)) return { ok:true, category:"Europa League (ITA)" };
-      if (matchesAll(t, FILTERS.confItalia)) return { ok:true, category:"Conference (ITA)" };
-      if (matchesAll(t, FILTERS.serieBMonzaCz)) return { ok:true, category:"Serie B (Monza/Catanzaro)" };
-      if (matchesAll(t, FILTERS.regginaD)) return { ok:true, category:"Serie D (Reggina)" };
-
-      // Tennis
-      if (matchesAll(t, FILTERS.tennisItaliani)) return { ok:true, category:"Tennis (italiani)" };
-
-      // Motori
-      if (matchesAll(t, FILTERS.f1)) return { ok:true, category:"Formula 1" };
-      if (matchesAll(t, FILTERS.motogp)) return { ok:true, category:"MotoGP" };
-
-      // Volley, Sci
-      if (matchesAll(t, FILTERS.volleyMonza)) return { ok:true, category:"Volley (Monza)" };
-      if (matchesAll(t, FILTERS.sciBrignoneGoggia)) return { ok:true, category:"Sci (Brignone/Goggia)" };
-
-      return { ok:false, category:null };
-    }
-
-    function parseSportInTvLines(articleText){
-      // Nell'articolo OA Sport c’è una sezione "CALENDARIO SPORT IN TV OGGI" e poi righe tipo:
-      // "20.45 Calcio, Serie A: Verona-Udinese – Diretta tv su ... DAZN" [page:2]
-      const text = (articleText || "").replace(/\r/g,"");
-
-      const idx = text.toLowerCase().indexOf("calendario sport in tv oggi");
-      const tail = idx >= 0 ? text.slice(idx) : text;
-
-      const lines = tail.split("\n").map(l => normalizeSpace(l)).filter(Boolean);
-
-      // Raccogliamo righe che iniziano con orario (es. 1.30, 20.45, 11.45) [page:2]
-      const eventLines = [];
-      const timeRe = /^(\d{1,2})[.:](\d{2})\s+/;
-
-      for (const line of lines){
-        if (timeRe.test(line)) eventLines.push(line);
-      }
-      return eventLines;
-    }
-
-    function parseEventLine(line){
-      // Esempio (dalla pagina del 26 gennaio) [page:2]:
-      // "20.45 Calcio, Serie A: Verona-Udinese – Diretta tv su Sky Sport Calcio; live streaming su Sky Go, NOW e DAZN"
-      const timeRe = /^(\d{1,2})[.:](\d{2})\s+(.*)$/;
-      const m = line.match(timeRe);
-      if (!m) return null;
-
-      const hh = m[1].padStart(2,"0");
-      const mm = m[2];
-      const rest = m[3];
-
-      const parts = rest.split("–");
-      const left = normalizeSpace(parts[0] || "");
-      const right = normalizeSpace(parts.slice(1).join("–") || "");
-
-      // Prova ad estrarre sport/competizione e descrizione
-      // "Calcio, Serie A: Verona-Udinese"
-      let sport = "";
-      let competition = "";
-      let descr = left;
-
-      const sportCompMatch = left.match(/^([^:]+):\s*(.*)$/); // "Calcio, Serie A" : "Verona-Udinese"
-      if (sportCompMatch){
-        const a = normalizeSpace(sportCompMatch[1]);
-        const b = normalizeSpace(sportCompMatch[2]);
-        descr = b || left;
-
-        // a potrebbe essere "Calcio, Serie A"
-        const sc = a.split(",").map(x => normalizeSpace(x));
-        sport = sc[0] || "";
-        competition = sc.slice(1).join(", ");
-      } else {
-        sport = left.split(",")[0] || "";
-      }
-
-      const channel = right; // teniamo l'intera parte "Diretta tv/streaming..." [page:2]
-
-      return { time: `${hh}:${mm}`, sport: sport, competition: competition, descr: descr, channel: channel };
-    }
-
-    function addRegginaAwayNoteIfNeeded(ev){
-      // Se c'è Reggina e non trovi canali, aggiungi nota (tuo requisito).
-      const t = (ev.descr || "") + " " + (ev.competition || "");
-      if (/reggina/i.test(t)){
-        const hasChannel = (ev.channel || "").trim().length > 0;
-        if (!hasChannel){
-          ev.channel = "Nota: se in trasferta, spesso su ReggioTV (verifica palinsesto).";
+function parseEvents(text) {
+  // Cerchiamo righe che iniziano con un orario (es. 20.45)
+  const lines = text.split('\n');
+  const found = [];
+  
+  lines.forEach(line => {
+    const timeMatch = line.match(/^(\d{1,2}[.:]\d{2})\s+(.*)/);
+    if (timeMatch) {
+      const time = timeMatch[1];
+      const info = timeMatch[2];
+      
+      for (const filter of FILTERS) {
+        if (filter.regex.test(info)) {
+          found.push({
+            time,
+            title: info.split('–')[0].trim(),
+            channel: info.split('–')[1]?.trim() || "Vedi articolo",
+            category: filter.name,
+            isSpecial: filter.isSpecial
+          });
+          break; 
         }
       }
-      return ev;
     }
+  });
+  return found;
+}
 
-    async function fetchRaw(url){
-      const full = PROXY_RAW + encodeURIComponent(url);
-      const res = await fetch(full, { cache: "no-store" });
-      if (!res.ok) throw new Error("Fetch fallita: " + url);
-      return await res.text();
+function render(data) {
+  const container = document.getElementById('app');
+  container.innerHTML = "";
+
+  ["ieri", "oggi", "domani"].forEach(day => {
+    const section = document.createElement('div');
+    section.className = "day-section";
+    
+    const title = document.createElement('div');
+    title.className = "day-title";
+    title.textContent = day;
+    section.appendChild(title);
+
+    if (data[day].length === 0) {
+      section.innerHTML += `<div class="empty">Nessun evento salvato per ${day}</div>`;
+    } else {
+      data[day].forEach(ev => {
+        const isReggina = ev.title.toLowerCase().includes("reggina");
+        const card = document.createElement('div');
+        card.className = `event-card ${ev.isSpecial ? 'diretta-goal' : ''}`;
+        card.innerHTML = `
+          <div class="event-header">
+            <span class="event-time">${ev.time}</span>
+            <span class="event-cat">${ev.category}</span>
+          </div>
+          <div class="event-title">${ev.title}</div>
+          <div class="event-channel">${ev.channel}</div>
+          ${isReggina ? '<span class="reggina-note">Nota: Trasferte spesso su ReggioTV</span>' : ''}
+        `;
+        section.appendChild(card);
+      });
     }
+    container.appendChild(section);
+  });
+}
 
-    function parseTagForDailyArticleLinks(html){
-      // Cerca link agli articoli giornalieri "sport-in-tv-oggi-..." presenti nella pagina tag [page:1]
-      const linkRe = /https:\/\/www\.oasport\.it\/\d{4}\/\d{2}\/sport-in-tv-oggi-[^"\s)]+/g;
-      const links = Array.from(new Set((html.match(linkRe) || [])));
+document.getElementById('refreshBtn').addEventListener('click', loadData);
+window.onload = loadData;
+</script>
 
-      // Limita per performance: ci bastano gli ultimi ~10
-      return links.slice(0, 15);
-    }
-
-    async function loadAll(){
-      const btn = document.getElementById("refreshBtn");
-      btn.disabled = true;
-
-      try{
-        setStatus("Carico pagina tag OA Sport...");
-        const tagHtml = await fetchRaw(OASPORT_TAG_URL);
-
-        const dailyLinks = parseTagForDailyArticleLinks(tagHtml);
-        if (!dailyLinks.length){
-          setStatus("Non trovo articoli nella pagina tag (layout cambiato).");
-          render({ ieri: [], oggi: [], domani: [] });
-          return;
-        }
-
-        setStatus(`Trovati ${dailyLinks.length} articoli. Carico ieri/oggi/domani...`);
-
-        // 1) Filtra i link con data parseabile e bucket ieri/oggi/domani
-        const daily = [];
-        for (const link of dailyLinks){
-          // Il titolo non è sempre facile da estrarre dalla pagina tag; per sicurezza prendiamo la pagina articolo e leggiamo l’H1 [page:2]
-          try{
-            const html = await fetchRaw(link);
-            const title = extractH1(html) || "Sport in tv oggi";
-            const date = parseDateFromTitle(title);
-            if (!date) continue;
-            const bucket = dayBucketFromDate(date);
-            if (!bucket) continue;
-            daily.push({ bucket, link, title, dateISO: date.toISOString(), html });
-          }catch(e){
-            console.warn("Skip link:", link, e);
-          }
-        }
-
-        if (!daily.length){
-          setStatus("Nessun articolo valido per ieri/oggi/domani trovato.");
-          render({ ieri: [], oggi: [], domani: [] });
-          return;
-        }
-
-        // 2) Per ciascun articolo (ieri/oggi/domani), estrai gli eventi (righe con orario) [page:2]
-        const out = { ieri: [], oggi: [], domani: [] };
-
-        for (const day of daily){
-          const articleText = stripTags(day.html); // testo pulito per parsing
-          const eventLines = parseSportInTvLines(articleText);
-
-          for (const line of eventLines){
-            const parsed = parseEventLine(line);
-            if (!parsed) continue;
-
-            // Costruisci un testo "ricercabile" per filtri
-            const textForFilter = `${parsed.sport} ${parsed.competition} ${parsed.descr} ${parsed.channel}`.toLowerCase();
-
-            const cls = classifyEvent(textForFilter);
-            if (!cls.ok) continue;
-
-            const ev = addRegginaAwayNoteIfNeeded({
-              day: day.bucket,
-              dateISO: day.dateISO,
-              time: parsed.time,
-              sport: parsed.sport || "Sport",
-              competition: parsed.competition || "",
-              title: parsed.descr || "",
-              channel: parsed.channel || "",
-              category: cls.category || "Rilevante",
-              isDirettaGoal: !!cls.isDirettaGoal,
-              sourceArticle: day.link
-            });
-
-            out[day.bucket].push(ev);
-          }
-
-          // 3) Aggiungi anche i link “LA DIRETTA LIVE DI …” come eventi Diretta Goal-like (opzionale) [page:2]
-          const liveLinks = extractLiveLinks(day.html);
-          for (const l of liveLinks){
-            const text = (l.text || "").toLowerCase();
-            // Non sappiamo se è "Diretta Goal", ma sono dirette live utili: le teniamo se matchano i tuoi filtri tennis/calcio ecc.
-            const cls = classifyEvent(text);
-            if (!cls.ok) continue;
-
-            out[day.bucket].push({
-              day: day.bucket,
-              dateISO: day.dateISO,
-              time: "",
-              sport: "Live",
-              competition: "",
-              title: l.text,
-              channel: "Diretta live OA Sport",
-              category: cls.category || "Live",
-              isDirettaGoal: !!cls.isDirettaGoal,
-              sourceArticle: l.href
-            });
-          }
-        }
-
-        // Ordina per ora (quando presente)
-        for (const k of DAYS){
-          out[k].sort((a,b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
-        }
-
-        // Cache
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), data: out }));
-
-        const total = Object.values(out).flat().length;
-        setStatus(`Aggiornato. Eventi filtrati: ${total}.`);
-        render(out);
-
-      }catch(err){
-        console.error(err);
-        const cached = loadCache();
-        if (cached){
-          setStatus("Errore rete/CORS: uso cache locale.");
-          render(cached.data);
-        } else {
-          setStatus("Errore rete/CORS e nessuna cache disponibile.");
-          render({ ieri: [], oggi: [], domani: [] });
-        }
-      }finally{
-        btn.disabled = false;
-      }
-    }
-
-    function extractH1(html){
-      // Nella pagina articolo c'è un H1 con il titolo completo [page:2]
-      const m = (html || "").match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-      return m ? safeText(stripTags(m[1])) : "";
-    }
-
-    function extractLiveLinks(html){
-      // Nell'articolo ci sono link in evidenza come "LA DIRETTA LIVE DI ..." [page:2]
-      const links = [];
-      const re = /<a[^>]+href="([^"]+)"[^>]*>\s*([\s\S]*?)\s*<\/a>/gi;
-      let m;
-      while ((m = re.exec(html)) !== null){
-        const href = m[1];
-        const text = safeText(stripTags(m[2]));
-        if (!text) continue;
-        if (!/LA DIRETTA LIVE/i.test(text)) continue; // [page:2]
-        if (!href.startsWith("http")) continue;
-        links.push({ href, text });
-      }
-      return links.slice(0, 10);
-    }
-
-    function loadCache(){
-      try{
-        const raw = localStorage.getItem(CACHE_KEY);
-        if (!raw) return null;
-        return JSON.parse(raw);
-      }catch{
-        return null;
-      }
-    }
-
-    function render(data){
-      const container = document.getElementById("eventsContainer");
-      container.innerHTML = "";
-
-      let any = false;
-
-      for (const day of DAYS){
-        const items = (data && data[day]) ? data[day] : [];
-        if (!items.length) continue;
-        any = true;
-
-        const section = document.createElement("div");
-        section.className = "day-section";
-
-        const title = document.createElement("div");
-        title.className = "day-title";
-        title.textContent = `${day.toUpperCase()} (${items.length})`;
-        section.appendChild(title);
-
-        for (const it of items){
-          const card = document.createElement("div");
-          card.className = "event" + (it.isDirettaGoal ? " diretta-goal" : "");
-          card.addEventListener("click", () => window.open(it.sourceArticle, "_blank"));
-
-          const t = document.createElement("div");
-          t.className = "event-title";
-          t.textContent = `${it.time ? it.time + " • " : ""}${it.title}`;
-
-          const meta = document.createElement("div");
-          meta.className = "event-meta";
-
-          const p1 = document.createElement("span");
-          p1.className = "pill" + (it.isDirettaGoal ? "" : " ok");
-          p1.textContent = it.category || "Evento";
-
-          const p2 = document.createElement("span");
-          p2.className = "pill";
-          const comp = (it.sport || "") + (it.competition ? `, ${it.competition}` : "");
-          p2.textContent = comp || "Sport";
-
-          meta.appendChild(p1);
-          meta.appendChild(p2);
-
-          const p3 = document.createElement("span");
-          p3.className = "pill warn";
-          p3.textContent = "Apri fonte";
-          meta.appendChild(p3);
-
-          card.appendChild(t);
-          card.appendChild(meta);
-
-          const s = document.createElement("div");
-          s.className = "snippet";
-          s.textContent = it.channel || "";
-          card.appendChild(s);
-
-          section.appendChild(card);
-        }
-
-        container.appendChild(section);
-      }
-
-      if (!any){
-        container.innerHTML =
-          `<div class="no-events">
-            Nessun evento filtrato trovato per ieri/oggi/domani.<br/>
-            Possibili cause: OA Sport non ha ancora pubblicato il post del giorno, oppure i filtri sono troppo restrittivi.
-          </div>`;
-      }
-    }
-
-    (function init(){
-      const cached = loadCache();
-      if (cached && cached.data){
-        render(cached.data);
-        const when = new Date(cached.savedAt).toLocaleString("it-IT");
-        setStatus(`Cache caricata (${when}). Premi "Aggiorna OA Sport" per aggiornare.`);
-      } else {
-        render({ ieri: [], oggi: [], domani: [] });
-      }
-      loadAll();
-    })();
-  </script>
 </body>
 </html>
