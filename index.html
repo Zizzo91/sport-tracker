@@ -1,157 +1,448 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eventi Sportivi Italiani</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh; 
-            padding: 20px; 
-        }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1 { 
-            text-align: center; color: white; 
-            font-size: 2.2em; margin-bottom: 30px; 
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        .controls { 
-            text-align: center; margin-bottom: 30px; 
-            background: rgba(255,255,255,0.1); padding: 20px; 
-            border-radius: 15px; backdrop-filter: blur(10px);
-        }
-        button { 
-            background: #ff6b6b; color: white; border: none; 
-            padding: 12px 24px; border-radius: 25px; 
-            font-size: 16px; cursor: pointer; margin: 0 10px;
-            transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
-        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-        
-        .day-section { margin-bottom: 25px; }
-        .day-title { 
-            font-size: 1.4em; font-weight: bold; color: white; 
-            margin-bottom: 15px; padding-left: 10px;
-            border-left: 4px solid #ffdd59;
-        }
-        .event { 
-            background: rgba(255,255,255,0.95); margin-bottom: 12px; 
-            border-radius: 12px; padding: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: all 0.3s; cursor: pointer;
-        }
-        .event:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        .event-title { font-weight: bold; font-size: 1.1em; margin-bottom: 8px; color: #333; }
-        .event-sport { font-size: 0.9em; color: #666; margin-bottom: 5px; }
-        .diretta-goal { background: linear-gradient(135deg, #ff4757, #ff3742) !important; color: white !important; }
-        .diretta-goal .event-title, .diretta-goal .event-sport { color: white !important; }
-        .loading { text-align: center; color: white; font-size: 1.2em; }
-        .no-events { color: rgba(255,255,255,0.8); text-align: center; font-style: italic; }
-        
-        @media (max-width: 600px) { 
-            h1 { font-size: 1.8em; } 
-            .event { padding: 15px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>⚽ Eventi Sportivi Italiani</h1>
-        
-        <div class="controls">
-            <button id="refreshBtn" onclick="loadEvents()">🔄 Aggiorna Eventi</button>
-            <span id="status">Pronto</span>
-        </div>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Eventi Sportivi Italiani</title>
+  <style>
+    :root{
+      --bg1:#667eea; --bg2:#764ba2;
+      --card:#ffffffee;
+      --text:#222;
+      --muted:#666;
+      --accent:#ffdd59;
+      --danger1:#ff4757; --danger2:#ff3742;
+    }
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      min-height:100vh;
+      background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 100%);
+      padding:20px;
+      color:white;
+    }
+    .container{ max-width:900px; margin:0 auto; }
+    header{
+      display:flex; flex-direction:column; gap:10px;
+      align-items:center; margin-bottom:18px;
+    }
+    h1{
+      font-size:2.0rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,.25);
+      text-align:center;
+    }
+    .subtitle{
+      color:rgba(255,255,255,.85);
+      font-size:.95rem;
+      text-align:center;
+      max-width:70ch;
+    }
+    .controls{
+      display:flex; flex-wrap:wrap; gap:10px;
+      justify-content:center; align-items:center;
+      background:rgba(255,255,255,.12);
+      padding:14px;
+      border-radius:14px;
+      backdrop-filter: blur(10px);
+      margin-bottom:18px;
+    }
+    button{
+      background:#ff6b6b;
+      color:white;
+      border:none;
+      padding:10px 16px;
+      border-radius:999px;
+      font-size:15px;
+      cursor:pointer;
+      transition:transform .2s, box-shadow .2s, opacity .2s;
+      box-shadow:0 4px 14px rgba(0,0,0,.2);
+    }
+    button:hover{ transform: translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.26); }
+    button:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
+    .status{
+      font-size:.95rem;
+      color:rgba(255,255,255,.9);
+    }
 
-        <div id="eventsContainer">
-            <!-- Gli eventi verranno caricati qui -->
-        </div>
+    .grid{ display:grid; gap:16px; }
+    .day-section{ margin-top:4px; }
+    .day-title{
+      font-weight:800;
+      font-size:1.15rem;
+      margin:12px 0 10px;
+      padding-left:10px;
+      border-left:4px solid var(--accent);
+    }
+
+    .event{
+      background:var(--card);
+      color:var(--text);
+      border-radius:14px;
+      padding:14px 14px;
+      box-shadow:0 6px 20px rgba(0,0,0,.12);
+      transition: transform .2s, box-shadow .2s;
+      cursor:pointer;
+    }
+    .event:hover{ transform: translateY(-2px); box-shadow:0 10px 26px rgba(0,0,0,.18); }
+    .event-title{ font-weight:800; margin-bottom:6px; line-height:1.25; }
+    .event-meta{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .pill{
+      font-size:.82rem;
+      padding:4px 10px;
+      border-radius:999px;
+      background:#eef2ff;
+      color:#374151;
+    }
+    .snippet{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:.92rem;
+      line-height:1.35;
+    }
+    .diretta-goal{
+      background: linear-gradient(135deg,var(--danger1),var(--danger2)) !important;
+      color:white !important;
+    }
+    .diretta-goal .event-title,
+    .diretta-goal .snippet{ color:white !important; }
+    .diretta-goal .pill{ background: rgba(255,255,255,.2); color:white; }
+
+    .no-events{
+      color:rgba(255,255,255,.85);
+      font-style:italic;
+      text-align:center;
+      margin-top:10px;
+    }
+
+    .small{
+      color:rgba(255,255,255,.75);
+      font-size:.85rem;
+      text-align:center;
+      margin-top:16px;
+    }
+
+    @media (max-width:600px){
+      body{ padding:14px; }
+      h1{ font-size:1.7rem; }
+      .subtitle{ font-size:.9rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Eventi Sportivi Italiani</h1>
+      <div class="subtitle">
+        Aggrega gli articoli “Sport in tv oggi” di OA Sport e li organizza per ieri/oggi/domani (con evidenza per Diretta Goal).
+      </div>
+    </header>
+
+    <div class="controls">
+      <button id="refreshBtn">Aggiorna OA Sport</button>
+      <button id="clearCacheBtn" title="Svuota cache locale">Svuota cache</button>
+      <div class="status" id="status">Pronto.</div>
     </div>
 
-    <script>
-        const DAYS = ['ieri', 'oggi', 'domani'];
-        const SPORTS_TO_TRACK = [
-            'Serie A', 'Champions League', 'Europa League', 'Conference League',
-            'Serie B', 'Monza', 'Catanzaro', 'Reggina', 'ReggioTV',
-            'Sinner', 'Musetti', 'Berrettini', 'Paolini', 'Darderi',
-            'Formula 1', 'F1', 'MotoGP',
-            'Vero Volley', 'Monza volley',
-            'Brignone', 'Goggia', 'diretta goal', 'Diretta Goal'
-        ];
+    <div id="eventsContainer" class="grid"></div>
 
-        async function loadEvents() {
-            const refreshBtn = document.getElementById('refreshBtn');
-            const status = document.getElementById('status');
-            
-            refreshBtn.disabled = true;
-            refreshBtn.textContent = '⏳ Caricamento...';
-            status.textContent = 'Recupero dati da OA Sport...';
+    <div class="small">
+      Sorgente: tag OA Sport “Sport in tv oggi”. Se un giorno manca, potrebbe non essere ancora pubblicato.
+    </div>
+  </div>
 
-            try {
-                // TODO: Sostituisci con RSS o proxy reale di oasport.it
-                // Esempio con proxy CORS: https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}
-                const mockData = await fetchMockData();
-                displayEvents(mockData);
-                status.textContent = `Aggiornato: ${new Date().toLocaleString('it-IT')}`;
-            } catch (error) {
-                status.textContent = 'Errore caricamento. Riprova.';
-                console.error('Errore:', error);
-            } finally {
-                refreshBtn.disabled = false;
-                refreshBtn.textContent = '🔄 Aggiorna Eventi';
-            }
+  <script>
+    // Sorgente (pagina tag)
+    const OASPORT_TAG_URL = "https://www.oasport.it/tag/sport-in-tv-oggi/";
+    // Proxy CORS: restituisce HTML raw (utile per GitHub Pages)
+    const PROXY_RAW = "https://api.allorigins.win/raw?url=";
+
+    // Parole chiave per filtrare (minimal: puoi estendere quando vuoi)
+    const KEYWORDS = [
+      // Calcio
+      "Serie A", "Champions League", "Europa League", "Conference League",
+      "Serie B", "Monza", "Catanzaro",
+      "Serie D", "Reggina", "ReggioTV",
+      // Tennis ITA
+      "Sinner", "Musetti", "Berrettini", "Paolini", "Darderi", "Cocciaretto", "Errani", "Vavassori",
+      "ATP", "WTA", "Australian Open",
+      // Motori
+      "Formula 1", "F1", "MotoGP",
+      // Volley
+      "Vero Volley", "Monza",
+      // Sci
+      "Brignone", "Goggia", "sci alpino",
+      // Diretta Goal
+      "Diretta Goal", "DIRETTA GOAL", "diretta goal"
+    ];
+
+    const CACHE_KEY = "oasport_sportintv_cache_v1";
+    const DAYS = ["ieri", "oggi", "domani"];
+
+    document.getElementById("refreshBtn").addEventListener("click", loadEvents);
+    document.getElementById("clearCacheBtn").addEventListener("click", () => {
+      localStorage.removeItem(CACHE_KEY);
+      setStatus("Cache svuotata.");
+      render({ ieri: [], oggi: [], domani: [] });
+    });
+
+    function setStatus(text){
+      document.getElementById("status").textContent = text;
+    }
+
+    function normalizeSpace(s){
+      return (s || "").replace(/\s+/g, " ").trim();
+    }
+
+    function stripTags(html){
+      return normalizeSpace(html.replace(/<[^>]*>/g, " "));
+    }
+
+    function monthToIndex(itMonth){
+      const m = itMonth.toLowerCase();
+      const map = {
+        "gennaio":0,"febbraio":1,"marzo":2,"aprile":3,"maggio":4,"giugno":5,
+        "luglio":6,"agosto":7,"settembre":8,"ottobre":9,"novembre":10,"dicembre":11
+      };
+      return (m in map) ? map[m] : null;
+    }
+
+    function startOfDay(d){
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function dayBucketFromDate(articleDate){
+      const today = startOfDay(new Date());
+      const yest = new Date(today); yest.setDate(today.getDate()-1);
+      const tomo = new Date(today); tomo.setDate(today.getDate()+1);
+
+      const a = startOfDay(articleDate).getTime();
+      if (a === yest.getTime()) return "ieri";
+      if (a === today.getTime()) return "oggi";
+      if (a === tomo.getTime()) return "domani";
+      return null;
+    }
+
+    // Esempi titolo in pagina:
+    // "Sport in tv oggi (lunedì 26 gennaio): orari e programma..."
+    // "Sport in tv oggi (giovedì 1° gennaio): ..."
+    function parseDateFromTitle(title){
+      const t = title.toLowerCase();
+
+      // Match: "(lunedì 26 gennaio)" oppure "(giovedì 1° gennaio)"
+      const re = /\((?:lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)\s+(\d{1,2})(?:°)?\s+([a-zà]+)\)/i;
+      const m = t.match(re);
+      if (!m) return null;
+
+      const dayNum = parseInt(m[1], 10);
+      const monthIdx = monthToIndex(m[2]);
+      if (Number.isNaN(dayNum) || monthIdx === null) return null;
+
+      // Regola pratica: se il mese è "dicembre" e siamo a gennaio, potrebbe essere anno precedente (e viceversa).
+      // Per il tuo caso (ieri/oggi/domani) basta assumere anno corrente e correggere se troppo distante.
+      const now = new Date();
+      let year = now.getFullYear();
+
+      const candidate = new Date(year, monthIdx, dayNum);
+      const diffDays = Math.round((startOfDay(candidate) - startOfDay(now)) / (1000*60*60*24));
+
+      // Se la data risulta troppo lontana (es. -300 giorni o +300) aggiusta l'anno.
+      if (diffDays < -300) year += 1;
+      if (diffDays > 300) year -= 1;
+
+      return new Date(year, monthIdx, dayNum);
+    }
+
+    function looksLikeDirettaGoal(text){
+      const s = (text || "").toLowerCase();
+      return s.includes("diretta goal");
+    }
+
+    function isRelevant(text){
+      const s = (text || "").toLowerCase();
+      return KEYWORDS.some(k => s.includes(k.toLowerCase()));
+    }
+
+    async function loadEvents(){
+      const btn = document.getElementById("refreshBtn");
+      btn.disabled = true;
+      setStatus("Caricamento da OA Sport...");
+
+      try{
+        const url = PROXY_RAW + encodeURIComponent(OASPORT_TAG_URL);
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error("Fetch fallita");
+        const html = await res.text();
+
+        const data = parseTagPage(html);
+
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          savedAt: Date.now(),
+          data
+        }));
+
+        const total = Object.values(data).flat().length;
+        setStatus(`Aggiornato. Elementi: ${total}.`);
+        render(data);
+      }catch(err){
+        console.error(err);
+        const cached = loadCache();
+        if (cached){
+          setStatus("Errore rete/CORS: uso cache locale.");
+          render(cached.data);
+        } else {
+          setStatus("Errore rete/CORS e nessuna cache disponibile.");
+          render({ ieri: [], oggi: [], domani: [] });
+        }
+      }finally{
+        btn.disabled = false;
+      }
+    }
+
+    function loadCache(){
+      try{
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      }catch{
+        return null;
+      }
+    }
+
+    // Parser minimale della pagina tag: estrae lista articoli "Sport in tv oggi..."
+    // Dal contenuto pagina si vede che ogni item include titolo e link in formato markdown-like nel testo estratto,
+    // ma in HTML reale sono card con href verso /2026/01/... [page:1]
+    function parseTagPage(html){
+      const data = { ieri: [], oggi: [], domani: [] };
+
+      // Estrai tutti i link a post "sport-in-tv-oggi-..."
+      // In pagina compaiono URL tipo:
+      // https://www.oasport.it/2026/01/sport-in-tv-oggi-lunedi-26-gennaio-...
+      const linkRe = /https:\/\/www\.oasport\.it\/\d{4}\/\d{2}\/sport-in-tv-oggi-[^"\s)]+/g;
+      const links = Array.from(new Set(html.match(linkRe) || []));
+
+      // Per ogni link, prova a ricavare titolo e snippet cercando attorno all'occorrenza
+      for (const link of links.slice(0, 30)){ // limita per performance
+        const idx = html.indexOf(link);
+        const windowHtml = html.slice(Math.max(0, idx - 600), idx + 900);
+
+        // Prova a catturare il titolo visibile vicino al link (linea successiva nel testo estratto)
+        // Nella pagina (contenuto estratto) il titolo è testo in chiaro dopo "1 giorno fa" ecc. [page:1]
+        const titleCandidate = stripTags(windowHtml)
+          .split("Sport in tv oggi")
+          .slice(1)
+          .map(s => "Sport in tv oggi" + s)
+          .find(s => s.toLowerCase().includes("sport in tv oggi (")) || "";
+
+        const title = normalizeSpace(titleCandidate).slice(0, 170) || "Sport in tv oggi";
+        const snippetMatch = windowHtml.match(/<p[^>]*>([^<]{40,400})<\/p>/i);
+        const snippet = snippetMatch ? normalizeSpace(snippetMatch[1]).slice(0, 180) + "…" : "";
+
+        const date = parseDateFromTitle(title);
+        const bucket = date ? dayBucketFromDate(date) : null;
+
+        // Se non è ieri/oggi/domani, non ci interessa
+        if (!bucket) continue;
+
+        const combined = (title + " " + snippet);
+        // Filtra per sport: se non trova keyword, puoi decidere di mostrare comunque l’articolo del giorno.
+        // Io lo mostro comunque (perché quell’articolo contiene tanti sport), MA lo etichetto come "Generale".
+        const relevant = isRelevant(combined);
+
+        data[bucket].push({
+          title,
+          link,
+          snippet,
+          tag: looksLikeDirettaGoal(combined) ? "Diretta Goal" : (relevant ? "Rilevante" : "Generale"),
+          isDirettaGoal: looksLikeDirettaGoal(combined),
+          dateISO: date ? date.toISOString() : null
+        });
+      }
+
+      // Ordina per sicurezza (se ci sono più articoli nello stesso bucket)
+      for (const k of DAYS){
+        data[k].sort((a,b) => (a.title || "").localeCompare(b.title || ""));
+      }
+      return data;
+    }
+
+    function render(data){
+      const container = document.getElementById("eventsContainer");
+      container.innerHTML = "";
+
+      let any = false;
+
+      for (const day of DAYS){
+        const items = (data && data[day]) ? data[day] : [];
+        if (!items.length) continue;
+
+        any = true;
+
+        const section = document.createElement("div");
+        section.className = "day-section";
+
+        const title = document.createElement("div");
+        title.className = "day-title";
+        title.textContent = `${day.toUpperCase()} (${items.length})`;
+
+        section.appendChild(title);
+
+        for (const it of items){
+          const card = document.createElement("div");
+          card.className = "event" + (it.isDirettaGoal ? " diretta-goal" : "");
+          card.addEventListener("click", () => window.open(it.link, "_blank"));
+
+          const t = document.createElement("div");
+          t.className = "event-title";
+          t.textContent = it.title;
+
+          const meta = document.createElement("div");
+          meta.className = "event-meta";
+
+          const pill1 = document.createElement("span");
+          pill1.className = "pill";
+          pill1.textContent = it.isDirettaGoal ? "DIRETTA GOAL" : "Sport in TV";
+
+          const pill2 = document.createElement("span");
+          pill2.className = "pill";
+          pill2.textContent = it.tag || "Generale";
+
+          meta.appendChild(pill1);
+          meta.appendChild(pill2);
+
+          card.appendChild(t);
+          card.appendChild(meta);
+
+          if (it.snippet){
+            const s = document.createElement("div");
+            s.className = "snippet";
+            s.textContent = it.snippet;
+            card.appendChild(s);
+          }
+
+          section.appendChild(card);
         }
 
-        async function fetchMockData() {
-            // SIMULAZIONE DATI - Sostituisci con chiamata reale RSS/proxy
-            return new Promise(resolve => setTimeout(() => {
-                resolve({
-                    ieri: [
-                        { title: 'Monza 2-1 Catanzaro | Serie B', sport: 'Calcio Serie B', link: '#' },
-                        { title: 'Reggina in trasferta su ReggioTV', sport: 'Calcio Serie D', link: '#' }
-                    ],
-                    oggi: [
-                        { title: '🚨 DIRETTA GOAL Serie A 20ª giornata', sport: 'Diretta Goal', link: '#' },
-                        { title: 'Sinner vs Djokovic ATP Australian Open', sport: 'Tennis ATP', link: '#' },
-                        { title: 'Inter-Milan | Derby di Champions', sport: 'Champions League', link: '#' }
-                    ],
-                    domani: [
-                        { title: 'Brignone slalom gigante Cortina', sport: 'Sci Alpino', link: '#' },
-                        { title: 'MotoGP Test Sepang', sport: 'MotoGP', link: '#' }
-                    ]
-                });
-            }, 1500));
-        }
+        container.appendChild(section);
+      }
 
-        function displayEvents(data) {
-            const container = document.getElementById('eventsContainer');
-            container.innerHTML = '';
+      if (!any){
+        container.innerHTML = `<div class="no-events">Nessun articolo trovato per ieri/oggi/domani (o parsing non riuscito). Premi “Aggiorna OA Sport”.</div>`;
+      }
+    }
 
-            DAYS.forEach(day => {
-                const dayData = data[day] || [];
-                if (dayData.length === 0) return;
-
-                const section = document.createElement('div');
-                section.className = 'day-section';
-                section.innerHTML = `
-                    <div class="day-title">${day.toUpperCase()}</div>
-                    ${dayData.map(event => `
-                        <div class="event ${event.sport.includes('Goal') ? 'diretta-goal' : ''}" 
-                             onclick="window.open('${event.link}', '_blank')">
-                            <div class="event-title">${event.title}</div>
-                            <div class="event-sport">${event.sport}</div>
-                        </div>
-                    `).join('')}
-                `;
-                container.appendChild(section);
-            });
-        }
-
-        // Carica al primo avvio
-        window.onload = loadEvents;
-    </script>
+    // Avvio: prova cache, poi carica
+    (function init(){
+      const cached = loadCache();
+      if (cached && cached.data){
+        render(cached.data);
+        const when = new Date(cached.savedAt).toLocaleString("it-IT");
+        setStatus(`Cache caricata (${when}). Premi "Aggiorna OA Sport" per aggiornare.`);
+      } else {
+        render({ ieri: [], oggi: [], domani: [] });
+      }
+      loadEvents();
+    })();
+  </script>
 </body>
 </html>
