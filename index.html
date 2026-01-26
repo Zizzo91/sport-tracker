@@ -1,263 +1,151 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Miei Eventi Sportivi</title>
-  <style>
-    :root {
-      --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
-      --accent: #38bdf8; --danger: #ef4444; --success: #22c55e;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background-color: var(--bg); color: var(--text);
-      line-height: 1.5; padding: 15px;
-    }
-    .container { max-width: 700px; margin: 0 auto; }
-    header { text-align: center; margin-bottom: 15px; }
-    h1 { font-size: 1.6rem; color: var(--accent); margin-bottom: 5px; }
-    
-    .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
-    button {
-      background: var(--accent); color: var(--bg); border: none;
-      padding: 10px 20px; border-radius: 8px; font-weight: bold;
-      cursor: pointer; font-size: 0.9rem;
-    }
-    .status { text-align: center; font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px; min-height: 1.2rem; }
-
-    .day-section { margin-bottom: 25px; }
-    .day-title {
-      font-size: 1.1rem; font-weight: bold; margin-bottom: 12px;
-      padding-bottom: 4px; border-bottom: 2px solid var(--accent);
-      text-transform: uppercase; color: var(--accent); display: flex; justify-content: space-between;
-      align-items: center;
-    }
-    .source-tag { font-size: 0.6rem; background: #334155; padding: 2px 6px; border-radius: 4px; color: #94a3b8; }
-
-    .event-card {
-      background: var(--card); border-radius: 10px; padding: 12px;
-      margin-bottom: 8px; border-left: 4px solid var(--accent);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .event-card.special { border-left-color: var(--danger); background: #450a0a; }
-    
-    .event-time { font-weight: 800; color: var(--accent); margin-right: 8px; font-size: 1rem; }
-    .event-title { font-weight: 600; font-size: 1rem; display: block; margin-bottom: 2px; }
-    .event-channel { font-size: 0.85rem; color: #94a3b8; }
-    .event-cat { font-size: 0.65rem; color: var(--accent); text-transform: uppercase; font-weight: bold; margin-bottom: 4px; display: block; }
-
-    .empty { text-align: center; padding: 15px; color: #64748b; font-style: italic; background: rgba(255,255,255,0.02); border-radius: 8px; font-size: 0.9rem; }
-    .reggina-note { color: #f87171; font-weight: bold; font-size: 0.8rem; margin-top: 4px; display: block; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miei Eventi Sportivi</title>
+    <style>
+        body { font-family: sans-serif; background-color: #121212; color: white; padding: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        h1 { text-align: center; color: #0088cc; }
+        .day-section { margin-bottom: 30px; border-top: 1px solid #333; padding-top: 10px; }
+        .day-title { font-size: 1.2em; font-weight: bold; color: #0088cc; margin-bottom: 10px; text-transform: uppercase; }
+        .event-card { background: #1e1e1e; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 5px solid #0088cc; }
+        .event-card.special { border-left-color: #ff4444; background: #2c1a1a; }
+        .time { font-weight: bold; color: #0088cc; font-size: 1.1em; }
+        .cat { font-size: 0.8em; color: #aaa; display: block; margin-bottom: 5px; }
+        .title { font-size: 1em; font-weight: bold; display: block; }
+        .status { text-align: center; font-size: 0.9em; color: #888; margin-bottom: 20px; }
+        button { display: block; width: 100%; padding: 10px; background: #0088cc; border: none; color: white; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    </style>
 </head>
 <body>
 
 <div class="container">
-  <header>
-    <h1>Eventi Sportivi</h1>
-  </header>
-
-  <div class="controls">
-    <button id="refreshBtn">🔄 Aggiorna Dati</button>
-  </div>
-  <div class="status" id="status">In attesa di aggiornamento...</div>
-
-  <div id="app"></div>
+    <h1>🏆 I Miei Eventi</h1>
+    <div class="status" id="status">Caricamento in corso...</div>
+    <button onclick="loadFromTelegram()">Aggiorna Ora</button>
+    <div id="app"></div>
 </div>
 
 <script>
-// Proxy per bypassare blocchi CORS
+// Proxy per leggere Telegram senza blocchi
 const PROXY = "https://api.allorigins.win/get?url=";
-const TG_URL = "https://t.me/s/CampioneIT";
-const OA_URL = "https://www.oasport.it/tag/sport-in-tv-oggi/";
+const TELEGRAM_URL = "https://t.me/s/CampioneIT";
 
-// I TUOI FILTRI PERSONALIZZATI
-const INTERESTS = {
-  calcio: /Serie A|Champions League|Europa League|Conference League|Serie B|Monza|Catanzaro|Reggina/i,
-  tennis: /Sinner|Musetti|Berrettini|Paolini|Darderi|Arnaldi|Sonego|Cobolli|Cocciaretto|Errani|Vavassori|Bolelli/i,
-  motori: /Formula 1|F1|MotoGP/i,
-  volley: /Monza.*Volley|Vero Volley/i,
-  sci: /Brignone|Sofia Goggia/i,
-  direttaGoal: /Diretta Goal/i
-};
+// FILTRI: Qui puoi aggiungere o togliere quello che vuoi seguire
+const MIEI_INTERESSI = /Serie A|Champions|Europa League|Conference|Monza|Catanzaro|Reggina|Sinner|Musetti|Berrettini|Paolini|Darderi|Formula 1|F1|MotoGP|Vero Volley|Brignone|Goggia|Diretta Goal/i;
 
-async function fetchData(url) {
-  const resp = await fetch(PROXY + encodeURIComponent(url));
-  const json = await resp.json();
-  return json.contents;
-}
-
-async function loadAll() {
-  const status = document.getElementById('status');
-  const app = document.getElementById('app');
-  status.textContent = "⏳ Recupero dati da Telegram...";
-  app.innerHTML = "";
-
-  const results = { ieri: [], oggi: [], domani: [] };
-
-  try {
-    // 1. ANALISI TELEGRAM (Primario per Oggi/Ieri)
-    const tgHtml = await fetchData(TG_URL);
-    const tgDoc = new DOMParser().parseFromString(tgHtml, 'text/html');
-    const messages = Array.from(tgDoc.querySelectorAll('.tgme_widget_message_text')).reverse();
-
-    messages.forEach(msg => {
-      const text = msg.innerText;
-      if (text.includes("Sport in TV oggi")) {
-        const dateLine = text.split('\n')[1] || "";
-        const type = getDayTypeFromText(dateLine);
-        if (type && results[type].length === 0) {
-          results[type] = parseTelegramMsg(text);
-          results[type].source = "Telegram";
-        }
-      }
-    });
-
-    // 2. ANALISI OA SPORT (Backup o per Domani)
-    if (results.oggi.length === 0 || results.domani.length === 0) {
-      status.textContent = "🔍 Controllo backup su OA Sport...";
-      const oaHtml = await fetchData(OA_URL);
-      const oaDoc = new DOMParser().parseFromString(oaHtml, 'text/html');
-      const oaLinks = Array.from(oaDoc.querySelectorAll('a'))
-        .filter(a => a.innerText.toLowerCase().includes("sport in tv oggi"))
-        .slice(0, 3);
-
-      for (const link of oaLinks) {
-        const type = getDayTypeFromText(link.innerText);
-        if (type && results[type].length === 0) {
-          const artHtml = await fetchData(link.href);
-          const artDoc = new DOMParser().parseFromString(artHtml, 'text/html');
-          results[type] = parseOAText(artDoc.body.innerText);
-          results[type].source = "OA Sport";
-        }
-      }
-    }
-
-    render(results);
-    status.textContent = "✅ Aggiornato alle " + new Date().toLocaleTimeString();
-  } catch (e) {
-    status.textContent = "❌ Errore. Riprova tra un minuto.";
-    console.error(e);
-  }
-}
-
-function getDayTypeFromText(text) {
-  const t = text.toLowerCase();
-  const now = new Date();
-  const monthNames = ["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
-  
-  const m = t.match(/(\d{1,2})\s+([a-z]+)/);
-  if (!m) return null;
-  
-  const d = parseInt(m[1]);
-  const mon = monthNames.indexOf(m[2]);
-  if (mon === -1) return null;
-
-  const artDate = new Date(now.getFullYear(), mon, d);
-  const diff = Math.round((artDate - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000);
-
-  if (diff === 0) return "oggi";
-  if (diff === -1) return "ieri";
-  if (diff === 1) return "domani";
-  return null;
-}
-
-function parseTelegramMsg(text) {
-  const lines = text.split('\n');
-  const events = [];
-  let currentCat = "Sport";
-
-  lines.forEach(line => {
-    const l = line.trim();
-    if (!l) return;
+async function loadFromTelegram() {
+    const status = document.getElementById('status');
+    const app = document.getElementById('app');
+    status.textContent = "⏳ Recupero messaggi da Telegram...";
     
-    if (l.match(/^[^\d\s]{1,2}\s+[A-Z]/)) {
-      currentCat = l.replace(/[^\w\s—]/g, '').trim();
-      return;
-    }
+    try {
+        const response = await fetch(PROXY + encodeURIComponent(TELEGRAM_URL));
+        const data = await response.json();
+        const html = data.contents;
+        
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        // Prende i messaggi dal più recente
+        const messages = Array.from(doc.querySelectorAll('.tgme_widget_message_text')).reverse();
+        
+        const results = { oggi: [], ieri: [], domani: [] };
 
-    const timeMatch = l.match(/^(\d{2}[:.]\d{2})\s*[—–-]\s*(.*)/);
-    if (timeMatch) {
-      const time = timeMatch[1];
-      const detail = timeMatch[2];
-      
-      if (isRelevant(detail + " " + currentCat)) {
-        events.push({
-          time,
-          cat: currentCat,
-          title: detail,
-          channel: "", 
-          special: INTERESTS.direttaGoal.test(detail)
+        messages.forEach(msg => {
+            const text = msg.innerText;
+            if (text.includes("Sport in TV oggi")) {
+                const lines = text.split('\n');
+                const dataTesto = lines[1] || ""; // La seconda riga di solito ha la data
+                const dayType = identificaGiorno(dataTesto);
+                
+                if (dayType && results[dayType].length === 0) {
+                    results[dayType] = estraiEventi(text);
+                }
+            }
         });
-      }
-    } else if (l.startsWith("❖") && events.length > 0) {
-      events[events.length - 1].channel = l.replace("❖", "").trim();
+
+        mostraEventi(results);
+        status.textContent = "✅ Ultimo aggiornamento: " + new Date().toLocaleTimeString();
+    } catch (e) {
+        status.textContent = "❌ Errore di caricamento. Riprova.";
+        console.error(e);
     }
-  });
-  return events;
 }
 
-function parseOAText(text) {
-  const lines = text.split('\n');
-  const events = [];
-  lines.forEach(line => {
-    const m = line.trim().match(/^(\d{1,2}[.:]\d{2})\s+(.*)/);
-    if (m && isRelevant(m[2])) {
-      events.push({
-        time: m[1],
-        cat: "OA Sport",
-        title: m[2].split('–')[0].trim(),
-        channel: m[2].split('–')[1]?.trim() || "",
-        special: INTERESTS.direttaGoal.test(m[2])
-      });
-    }
-  });
-  return events;
+function identificaGiorno(testo) {
+    const t = testo.toLowerCase();
+    const oggi = new Date().getDate();
+    // Cerca il numero del giorno nel testo (es: "26 gennaio")
+    const match = t.match(/(\d{1,2})/);
+    if (!match) return null;
+    
+    const giornoPost = parseInt(match[1]);
+    if (giornoPost === oggi) return "oggi";
+    if (giornoPost === oggi - 1) return "ieri";
+    if (giornoPost === oggi + 1) return "domani";
+    return null;
 }
 
-function isRelevant(text) {
-  return Object.values(INTERESTS).some(reg => reg.test(text));
+function estraiEventi(testo) {
+    const lines = testo.split('\n');
+    let categoriaCorrente = "Sport";
+    const eventiTrovati = [];
+
+    lines.forEach(line => {
+        const l = line.trim();
+        // Se la riga è una categoria (ha un'emoji all'inizio e non è un orario)
+        if (l.match(/^[^\d\s]{1,2}\s+[A-Z]/)) {
+            categoriaCorrente = l.replace(/[^\w\s—]/g, '').trim();
+        }
+        
+        // Se la riga è un evento (inizia con orario 12:30 o 12.30)
+        const matchOrario = l.match(/^(\d{2}[:.]\d{2})\s*[—–-]\s*(.*)/);
+        if (matchOrario) {
+            const info = matchOrario[2];
+            // Applica il filtro dei tuoi interessi
+            if (MIEI_INTERESSI.test(info) || MIEI_INTERESSI.test(categoriaCorrente)) {
+                eventiTrovati.push({
+                    ora: matchOrario[1],
+                    cat: categoriaCorrente,
+                    titolo: info,
+                    speciale: /Diretta Goal/i.test(info)
+                });
+            }
+        }
+    });
+    return eventiTrovati;
 }
 
-function render(data) {
-  const app = document.getElementById('app');
-  app.innerHTML = "";
+function mostraEventi(dati) {
+    const app = document.getElementById('app');
+    app.innerHTML = "";
+    
+    ["ieri", "oggi", "domani"].forEach(giorno => {
+        const eventi = dati[giorno];
+        if (eventi.length === 0 && giorno !== "oggi") return;
 
-  ["ieri", "oggi", "domani"].forEach(day => {
-    const evs = data[day] || [];
-    const section = document.createElement('div');
-    section.className = "day-section";
-    section.innerHTML = `
-      <div class="day-title">
-        ${day} 
-        <span class="source-tag">${evs.source || 'Nessun dato'}</span>
-      </div>
-    `;
-
-    if (evs.length === 0) {
-      section.innerHTML += `<div class="empty">Nessun evento per i tuoi filtri</div>`;
-    } else {
-      evs.sort((a,b) => a.time.localeCompare(b.time)).forEach(ev => {
-        const card = document.createElement('div');
-        card.className = `event-card ${ev.special ? 'special' : ''}`;
-        const isReggina = ev.title.toLowerCase().includes("reggina");
-        card.innerHTML = `
-          <span class="event-cat">${ev.cat}</span>
-          <span class="event-title"><span class="event-time">${ev.time}</span>${ev.title}</span>
-          <div class="event-channel">${ev.channel}</div>
-          ${isReggina ? '<span class="reggina-note">Nota: Trasferte spesso su ReggioTV</span>' : ''}
+        const html = `
+            <div class="day-section">
+                <div class="day-title">${giorno}</div>
+                ${eventi.length === 0 ? '<div style="color:#666">Nessun evento trovato</div>' : 
+                    eventi.map(ev => `
+                    <div class="event-card ${ev.speciale ? 'special' : ''}">
+                        <span class="cat">${ev.cat}</span>
+                        <span class="time">${ev.ora}</span>
+                        <span class="title">${ev.titolo}</span>
+                    </div>
+                `).join('')}
+            </div>
         `;
-        section.appendChild(card);
-      });
-    }
-    app.appendChild(section);
-  });
+        app.innerHTML += html;
+    });
 }
 
-document.getElementById('refreshBtn').addEventListener('click', loadAll);
-window.onload = loadAll;
+// Avvia al caricamento
+window.onload = loadFromTelegram;
 </script>
+
 </body>
 </html>
