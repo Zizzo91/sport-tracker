@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventi Sportivi Italiani</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { 
+            text-align: center; color: white; 
+            font-size: 2.2em; margin-bottom: 30px; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .controls { 
+            text-align: center; margin-bottom: 30px; 
+            background: rgba(255,255,255,0.1); padding: 20px; 
+            border-radius: 15px; backdrop-filter: blur(10px);
+        }
+        button { 
+            background: #ff6b6b; color: white; border: none; 
+            padding: 12px 24px; border-radius: 25px; 
+            font-size: 16px; cursor: pointer; margin: 0 10px;
+            transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        
+        .day-section { margin-bottom: 25px; }
+        .day-title { 
+            font-size: 1.4em; font-weight: bold; color: white; 
+            margin-bottom: 15px; padding-left: 10px;
+            border-left: 4px solid #ffdd59;
+        }
+        .event { 
+            background: rgba(255,255,255,0.95); margin-bottom: 12px; 
+            border-radius: 12px; padding: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s; cursor: pointer;
+        }
+        .event:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .event-title { font-weight: bold; font-size: 1.1em; margin-bottom: 8px; color: #333; }
+        .event-sport { font-size: 0.9em; color: #666; margin-bottom: 5px; }
+        .diretta-goal { background: linear-gradient(135deg, #ff4757, #ff3742) !important; color: white !important; }
+        .diretta-goal .event-title, .diretta-goal .event-sport { color: white !important; }
+        .loading { text-align: center; color: white; font-size: 1.2em; }
+        .no-events { color: rgba(255,255,255,0.8); text-align: center; font-style: italic; }
+        
+        @media (max-width: 600px) { 
+            h1 { font-size: 1.8em; } 
+            .event { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚽ Eventi Sportivi Italiani</h1>
+        
+        <div class="controls">
+            <button id="refreshBtn" onclick="loadEvents()">🔄 Aggiorna Eventi</button>
+            <span id="status">Pronto</span>
+        </div>
+
+        <div id="eventsContainer">
+            <!-- Gli eventi verranno caricati qui -->
+        </div>
+    </div>
+
+    <script>
+        const DAYS = ['ieri', 'oggi', 'domani'];
+        const SPORTS_TO_TRACK = [
+            'Serie A', 'Champions League', 'Europa League', 'Conference League',
+            'Serie B', 'Monza', 'Catanzaro', 'Reggina', 'ReggioTV',
+            'Sinner', 'Musetti', 'Berrettini', 'Paolini', 'Darderi',
+            'Formula 1', 'F1', 'MotoGP',
+            'Vero Volley', 'Monza volley',
+            'Brignone', 'Goggia', 'diretta goal', 'Diretta Goal'
+        ];
+
+        async function loadEvents() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const status = document.getElementById('status');
+            
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = '⏳ Caricamento...';
+            status.textContent = 'Recupero dati da OA Sport...';
+
+            try {
+                // TODO: Sostituisci con RSS o proxy reale di oasport.it
+                // Esempio con proxy CORS: https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}
+                const mockData = await fetchMockData();
+                displayEvents(mockData);
+                status.textContent = `Aggiornato: ${new Date().toLocaleString('it-IT')}`;
+            } catch (error) {
+                status.textContent = 'Errore caricamento. Riprova.';
+                console.error('Errore:', error);
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '🔄 Aggiorna Eventi';
+            }
+        }
+
+        async function fetchMockData() {
+            // SIMULAZIONE DATI - Sostituisci con chiamata reale RSS/proxy
+            return new Promise(resolve => setTimeout(() => {
+                resolve({
+                    ieri: [
+                        { title: 'Monza 2-1 Catanzaro | Serie B', sport: 'Calcio Serie B', link: '#' },
+                        { title: 'Reggina in trasferta su ReggioTV', sport: 'Calcio Serie D', link: '#' }
+                    ],
+                    oggi: [
+                        { title: '🚨 DIRETTA GOAL Serie A 20ª giornata', sport: 'Diretta Goal', link: '#' },
+                        { title: 'Sinner vs Djokovic ATP Australian Open', sport: 'Tennis ATP', link: '#' },
+                        { title: 'Inter-Milan | Derby di Champions', sport: 'Champions League', link: '#' }
+                    ],
+                    domani: [
+                        { title: 'Brignone slalom gigante Cortina', sport: 'Sci Alpino', link: '#' },
+                        { title: 'MotoGP Test Sepang', sport: 'MotoGP', link: '#' }
+                    ]
+                });
+            }, 1500));
+        }
+
+        function displayEvents(data) {
+            const container = document.getElementById('eventsContainer');
+            container.innerHTML = '';
+
+            DAYS.forEach(day => {
+                const dayData = data[day] || [];
+                if (dayData.length === 0) return;
+
+                const section = document.createElement('div');
+                section.className = 'day-section';
+                section.innerHTML = `
+                    <div class="day-title">${day.toUpperCase()}</div>
+                    ${dayData.map(event => `
+                        <div class="event ${event.sport.includes('Goal') ? 'diretta-goal' : ''}" 
+                             onclick="window.open('${event.link}', '_blank')">
+                            <div class="event-title">${event.title}</div>
+                            <div class="event-sport">${event.sport}</div>
+                        </div>
+                    `).join('')}
+                `;
+                container.appendChild(section);
+            });
+        }
+
+        // Carica al primo avvio
+        window.onload = loadEvents;
+    </script>
+</body>
+</html>
